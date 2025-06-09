@@ -8,6 +8,7 @@
 #include <linux/platform_device.h>
 #include <linux/pm_domain.h>
 #include <linux/pm_runtime.h>
+#include <linux/version.h>
 
 #include <drm/drm_accel.h>
 #include <drm/drm_drv.h>
@@ -595,7 +596,11 @@ detach_genpd:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 10, 0) >= LINUX_VERSION_CODE
 static int ane_platform_remove(struct platform_device *pdev)
+#else
+static void ane_platform_remove(struct platform_device *pdev)
+#endif
 {
 	struct ane_device *ane = platform_get_drvdata(pdev);
 	drm_dev_unregister(&ane->drm);
@@ -603,7 +608,9 @@ static int ane_platform_remove(struct platform_device *pdev)
 	pm_runtime_dont_use_autosuspend(ane->dev);
 	ane_iommu_domain_free(ane);
 	ane_detach_genpd(ane);
+#if KERNEL_VERSION(6, 10, 0) >= LINUX_VERSION_CODE
 	return 0;
+#endif
 }
 
 static int __maybe_unused ane_runtime_suspend(struct device *dev)
